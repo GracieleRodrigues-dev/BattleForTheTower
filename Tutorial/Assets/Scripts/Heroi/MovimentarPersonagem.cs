@@ -24,7 +24,6 @@ public class MovimentarPersonagem : MonoBehaviour
     private int vida = 100;
     public Slider sliderVida;
 
-    public GameObject telaFimJogo;
     public bool estahVivo = true;
 
     public void AtualizarVida(int novaVida){
@@ -50,8 +49,6 @@ public class MovimentarPersonagem : MonoBehaviour
     }
 
     void Update(){
-        /*if(!estahVivo)
-            return;*/
 
         if(vida<=0){
             FimDeJogo();
@@ -106,26 +103,12 @@ public class MovimentarPersonagem : MonoBehaviour
     }
 
     private void FimDeJogo(){
-        //Time.timeScale = 0;
-        //Camera.main.GetComponent<AudioListener>().enabled = false;
-        //GetComponentInChildren<Glock>().enabled = false;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         ScoreManager.Instance.setStatus("VOCÊ MORREU!");
         SceneManager.LoadScene(2);
-        //telaFimJogo.SetActive(true);
-        //estahVivo = false;
     }
 
-
-    /*public void ReiniciarJogo(){
-        Time.timeScale = 1;
-        SceneManager.LoadScene(0);
-    }
-    public void SairJogo()
-    {
-        Application.Quit();
-    }*/
 
     public int getVida(){
         return vida;

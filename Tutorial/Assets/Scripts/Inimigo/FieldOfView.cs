@@ -5,58 +5,58 @@ using UnityEngine;
 public class FieldOfView : MonoBehaviour
 {
     public float distanciaVisao;
-    [Range(0,360)]
+    [Range(0, 360)]
     public float anguloVisao;
     public bool podeVerPlayer;
+    public bool podeVerMascote;  
     private GameObject player;
-    // Start is called before the first frame update
+    private GameObject mascote;
+
     void Start()
     {
         player = GameObject.FindWithTag("Player");
+        mascote = GameObject.FindWithTag("mascote"); 
     }
 
-    // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        
+        ProcurarAlvoVisivel();
     }
 
-    private void OlharParaJogador(){
-        Vector3 direcaoOlhar = player.transform.position-transform.position;
-        Quaternion rotacao = Quaternion.LookRotation(direcaoOlhar);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation,rotacao, Time.deltaTime*300);
-    }
-
-    private void ProcurarPlayerVisivel()
+    private void ProcurarAlvoVisivel()
     {
-        Collider[] alvosDentroRaio = Physics.OverlapSphere(transform.position,distanciaVisao);
-        
-        foreach(Collider alvo in alvosDentroRaio)
+        podeVerPlayer = ProcurarVisivel(player);
+        podeVerMascote = ProcurarVisivel(mascote);  
+    }
+
+    private bool ProcurarVisivel(GameObject alvo)
+    {
+        Collider[] alvosDentroRaio = Physics.OverlapSphere(transform.position, distanciaVisao);
+
+        foreach (Collider col in alvosDentroRaio)
         {
-            if(alvo.gameObject == player)
+            if (col.gameObject == alvo)
             {
                 Vector3 dirToAlvo = (alvo.transform.position - transform.position).normalized;
                 dirToAlvo.y = 0;
-                if(Vector3.Angle(transform.forward,dirToAlvo) < anguloVisao/2)
+                if (Vector3.Angle(transform.forward, dirToAlvo) < anguloVisao / 2)
                 {
                     float disToAlvo = Vector3.Distance(transform.position, alvo.transform.position);
-                    if(!Physics.Raycast(transform.position, dirToAlvo, disToAlvo))
+                    if (!Physics.Raycast(transform.position, dirToAlvo, disToAlvo))
                     {
-                        podeVerPlayer = true;
-                        OlharParaJogador();
-                        return;
+                        OlharParaAlvo(alvo);
+                        return true;
                     }
                 }
             }
         }
-
-        podeVerPlayer = false;
+        return false;
     }
 
-
-    void FixedUpdate()
+    private void OlharParaAlvo(GameObject alvo)
     {
-        ProcurarPlayerVisivel();
+        Vector3 direcaoOlhar = alvo.transform.position - transform.position;
+        Quaternion rotacao = Quaternion.LookRotation(direcaoOlhar);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacao, Time.deltaTime * 300);
     }
-
 }

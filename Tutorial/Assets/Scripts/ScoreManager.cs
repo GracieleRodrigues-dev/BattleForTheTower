@@ -23,6 +23,9 @@ public class ScoreManager : MonoBehaviour
     private string statusEndGame;
 
     public Door finalDoor;
+    public GameObject hordaInimigos;
+
+    private bool jogoTerminado;
 
     public static ScoreManager Instance { get; private set; }
 
@@ -45,11 +48,12 @@ public class ScoreManager : MonoBehaviour
         audioSource = GetComponent<AudioSource>(); 
         navMeshObstacle = FindObjectOfType<NavMeshObstacle>();
         navMeshObstacle.enabled = true; //tive que adicionar um obstaculo para os inimigos não sairem do templo   
+        hordaInimigos.SetActive(false);
         ambientAudioSource = gameObject.AddComponent<AudioSource>();
         ambientAudioSource.loop = true; 
         ambientAudioSource.volume = 0.5f; 
-        TocarSomAmbiente(0);
-        
+        jogoTerminado = false;
+        TocarSomAmbiente(0);        
     }
 
     void Update()
@@ -64,14 +68,16 @@ public class ScoreManager : MonoBehaviour
             DestrancarPorta("Door2","Nova sala desbloqueada! Capture seu mascote e alcance a torre para vencer o jogo!");
             navMeshObstacle.enabled = false; //removendo o obstáculo para o mascote conseguir sair do templo
             ambientAudioSource.volume = 1.5f; 
+            hordaInimigos.SetActive(true);
             TrocarSomAmbiente(1);
         }
 
-        if (!finalDoor.DoorClosed){
-
-            TrocarSomAmbiente(2); //som vitória!
+         if (!finalDoor.DoorClosed && !jogoTerminado)
+         {
+            jogoTerminado = true;
+            TrocarSomAmbiente(2); 
             ScoreManager.Instance.setStatus("VOCÊ VENCEU!");
-            Invoke("endGame", 5f);
+            StartCoroutine(VencerJogo());
         }
         
     }
@@ -152,8 +158,10 @@ public class ScoreManager : MonoBehaviour
         statusEndGame = text;
     }
 
-    private void endGame()
-    {
-        SceneManager.LoadScene(2);
-    }
+    IEnumerator VencerJogo()
+{
+    MostrarMensagem("PARABÉNS!!!!! VOCÊ VENCEU!");
+    yield return new WaitForSeconds(5); 
+    SceneManager.LoadScene(2);
+}
 }

@@ -34,7 +34,6 @@ public class Mascote : MonoBehaviour, ILevarDano
         audioSrc = GetComponent<AudioSource>();
         fov = GetComponent<FieldOfViewMascote>();
         agente.enabled = false;
-        sliderVida.gameObject.SetActive(false);
         agente.speed = velocidade;
     }
 
@@ -43,7 +42,6 @@ public class Mascote : MonoBehaviour, ILevarDano
         PortaMascoteIsLocked();
 
         if (agente.enabled){
-            sliderVida.gameObject.SetActive(true);
             sliderVida.value = vida;
             if (vida <= 0)
             {
@@ -51,13 +49,13 @@ public class Mascote : MonoBehaviour, ILevarDano
                 return;
             }
 
-            // Se ver inimigos, vai até eles e ataca
-            if (fov.podeVerInimigo)
-            {
-                VaiAtrasInimigo(fov.inimigoVisivel);
-            } else if (heroi.GetComponent<MovimentarPersonagem>().getVida() < 100 && fov.podeVerCaixaDeVida) // Se herói estiver ferido, procurar caixas de vida
+            // Se herói estiver ferido, procurar caixas de vida
+            if (heroi.GetComponent<MovimentarPersonagem>().getVida() < 100 && fov.podeVerCaixaDeVida) 
             {
                 VaiAtrasCaixaDeVida(fov.caixaDeVidaVisivel);
+            } else if (fov.podeVerInimigo) // Se ver inimigos, vai até eles e ataca
+            {
+               VaiAtrasInimigo(fov.inimigoVisivel);
             } else // Caso contrário, segue o herói
             {
                 SeguirHeroi();
@@ -104,6 +102,11 @@ public class Mascote : MonoBehaviour, ILevarDano
         }
     }
 
+    public void AtualizarVida(int novaVida){
+        vida = Mathf.CeilToInt(Mathf.Clamp(vida + novaVida,0,100));
+        sliderVida.value = vida;
+    }
+
     private void VaiAtrasCaixaDeVida(GameObject caixaDeVida)
     {
         float distanciaCaixa = Vector3.Distance(transform.position, caixaDeVida.transform.position);
@@ -130,13 +133,13 @@ public class Mascote : MonoBehaviour, ILevarDano
         agente.isStopped = true;
         this.enabled = false;   
         sliderVida.gameObject.SetActive(false);
+        Destroy(this,5f);
     }
 
 
-    // Eventos de animação
     public void Passo()
     {
-        // Som de passos do mascote
+    
     }
 
     public void Ataque()
@@ -144,7 +147,6 @@ public class Mascote : MonoBehaviour, ILevarDano
         if(hit.transform.tag == "LevarDano" )
             {
                 ILevarDano levarDano = hit.transform.GetComponent<ILevarDano>();
-                
                 levarDano.LevarDano(5);
                 audioSrc.PlayOneShot(somAtaque);
             }
@@ -152,12 +154,12 @@ public class Mascote : MonoBehaviour, ILevarDano
     }
 
     public void LevarDano(int dano){
-        vida -= dano;
         agente.isStopped = true;
         anim.SetTrigger("levouTiro");
         anim.SetBool("podeAndar",false);
         audioSrc.clip = somDano;
         audioSrc.Play();
+        AtualizarVida(dano);
     }    
 
     private void PortaMascoteIsLocked(){
@@ -171,10 +173,12 @@ public class Mascote : MonoBehaviour, ILevarDano
                 {
                    agente.enabled = false;
                    anim.SetBool("podeAndar",false);
+                   sliderVida.gameObject.SetActive(false);
                 } else
                 {
                     agente.enabled = true;
                     anim.SetBool("podeAndar",true);
+                    sliderVida.gameObject.SetActive(true);
                 }
             }
         }

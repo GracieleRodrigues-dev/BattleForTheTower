@@ -74,7 +74,6 @@ public class Boss : MonoBehaviour, ILevarDano
         if(distanciaDoPlayer < distanciaDoAtaque)
         {
             agente.isStopped = true;
-            Debug.Log("Ataque");
             anim.SetTrigger("ataque");
             anim.SetBool("podeAndar",false);
             anim.SetBool("pararAtaque",false);

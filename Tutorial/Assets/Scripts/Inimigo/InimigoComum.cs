@@ -8,9 +8,10 @@ public class InimigoComum : MonoBehaviour, ILevarDano
 {
     private NavMeshAgent agente;
     private GameObject player;
+    private GameObject mascote;
     private Animator anim;
     private AudioSource audioSrc;
-    public AudioClip somMorte,somDano,somPasso;
+    public AudioClip somMorte, somDano, somPasso;
     public float distanciaDoAtaque = 2.0f;
     public int vida = 50;
     private PatrulharAleatorio pal;
@@ -18,12 +19,11 @@ public class InimigoComum : MonoBehaviour, ILevarDano
     private FieldOfView fov;
     private ScoreManager scoreManager;
 
-    
-    // Start is called before the first frame update
     void Start()
     {
         agente = GetComponent<NavMeshAgent>();
         player = GameObject.FindWithTag("Player");
+        mascote = GameObject.FindWithTag("mascote"); 
         anim = GetComponent<Animator>();
         audioSrc = GetComponent<AudioSource>();
         fov = GetComponent<FieldOfView>();
@@ -31,93 +31,103 @@ public class InimigoComum : MonoBehaviour, ILevarDano
         scoreManager = GameObject.FindObjectOfType<ScoreManager>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //VaiAtrasJogador();
-        //OlharParaJogador();
-
-        if(vida <=0){
+        if (vida <= 0)
+        {
             Morrer();
             return;
         }
 
-        if (fov.podeVerPlayer)
+        if (fov.podeVerPlayer || fov.podeVerMascote)  
         {
-            VaiAtrasJogador();
-        }else 
+            VaiAtrasAlvo();  
+        }
+        else
         {
-            anim.SetBool("pararAtaque",true);
+            anim.SetBool("pararAtaque", true);
             CorrigirRigidSair();
-            agente.isStopped= false;
+            agente.isStopped = false;
             pal.Andar();
         }
-
     }
 
-    private void VaiAtrasJogador(){
-        float distanciaDoPlayer = Vector3.Distance(transform.position,player.transform.position);
-        if(distanciaDoPlayer < distanciaDoAtaque)
+    private void VaiAtrasAlvo()
+    {
+        GameObject alvo = fov.podeVerPlayer ? player : mascote;  
+        float distanciaDoAlvo = Vector3.Distance(transform.position, alvo.transform.position);
+
+        if (distanciaDoAlvo < distanciaDoAtaque)
         {
             agente.isStopped = true;
             anim.SetTrigger("ataque");
-            anim.SetBool("podeAndar",false);
-            anim.SetBool("pararAtaque",false);
+            anim.SetBool("podeAndar", false);
+            anim.SetBool("pararAtaque", false);
             CorrigirRigidEntrar();
         }
 
-        if(distanciaDoPlayer >= distanciaDoAtaque +1)
+        if (distanciaDoAlvo >= distanciaDoAtaque + 1)
         {
-            anim.SetBool("pararAtaque",true);
+            anim.SetBool("pararAtaque", true);
             CorrigirRigidSair();
         }
-        if(anim.GetBool("podeAndar")){
+
+        if (anim.GetBool("podeAndar"))
+        {
             agente.isStopped = false;
-            agente.SetDestination(player.transform.position);
+            agente.SetDestination(alvo.transform.position);
             anim.ResetTrigger("ataque");
         }
     }
 
-    private void OlharParaJogador(){
-        Vector3 direcaoOlhar = player.transform.position-transform.position;
-        Quaternion rotacao = Quaternion.LookRotation(direcaoOlhar);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation,rotacao, Time.deltaTime*300);
+    public void DarDano()
+    {
+        if (fov.podeVerPlayer)
+        {
+            player.GetComponent<MovimentarPersonagem>().AtualizarVida(-10);
+        }
+        else if (fov.podeVerMascote)
+        {
+            mascote.GetComponent<Mascote>().LevarDano(-10); 
+        }
     }
 
-    private void CorrigirRigidEntrar(){
-        GetComponent<Rigidbody>().isKinematic = true;
-    }
-    private void CorrigirRigidSair(){
-        GetComponent<Rigidbody>().isKinematic = false;
-    }
-
-    public void LevarDano(int dano){
+    public void LevarDano(int dano)
+    {
         vida -= dano;
         agente.isStopped = true;
         anim.SetTrigger("levouTiro");
-        anim.SetBool("podeAndar",false);
+        anim.SetBool("podeAndar", false);
         audioSrc.clip = somDano;
         audioSrc.Play();
     }
 
-    private void Morrer(){
+    private void Morrer()
+    {
         audioSrc.clip = somMorte;
         audioSrc.Play();
         agente.isStopped = true;
-        anim.SetBool("podeAndar",false);
-        anim.SetBool("pararAtaque",true);
+        anim.SetBool("podeAndar", false);
+        anim.SetBool("pararAtaque", true);
         anim.SetBool("morreu", true);
-        scoreManager.AdicionarPontos(pointValue,1);
+        scoreManager.AdicionarPontos(pointValue, 1);
         this.enabled = false;
         Destroy(gameObject, 5f);
     }
 
-    public void DarDano(){
-        player.GetComponent<MovimentarPersonagem>().AtualizarVida(-10);
-    }
-
     public void Passo()
     {
-        audioSrc.PlayOneShot(somPasso,0.5f);
+        audioSrc.PlayOneShot(somPasso, 0.5f);
+    }
+    
+
+    private void CorrigirRigidEntrar()
+    {
+        GetComponent<Rigidbody>().isKinematic = true;
+    }
+
+    private void CorrigirRigidSair()
+    {
+        GetComponent<Rigidbody>().isKinematic = false;
     }
 }
